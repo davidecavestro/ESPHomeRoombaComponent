@@ -6,6 +6,7 @@ esphome:
   includes:
     - roomba_component.h
   libraries:
+    - EspSoftwareSerial
     - Roomba=https://github.com/davidecavestro/Roomba.git
 #    - Roomba=file:///config/Roomba
 
@@ -51,7 +52,7 @@ sensor:
  - platform: custom
    lambda: |-
       auto r = ${init}
-      return {r->distanceSensor, r->voltageSensor, r->currentSensor, r->chargeSensor, r->capacitySensor, r->batteryPercentSensor};
+      return {r->distanceSensor, r->voltageSensor, r->currentSensor, r->chargeSensor, r->capacitySensor, r->batteryPercentSensor, r->driveSpeedSensor};
    sensors:
      - name: "${name} distance"
        unit_of_measurement: "mm"
@@ -71,15 +72,26 @@ sensor:
      - name: "${name} battery"
        unit_of_measurement: "%"
        accuracy_decimals: 0
-       
+     - name: "${name} drive speed"
+       unit_of_measurement: "mm/s"
+       accuracy_decimals: 0
+
 text_sensor:
   - platform: custom
     lambda: |-
       auto r = ${init}
       return {r->activitySensor};
-      
+
     text_sensors:
       - name: "${name} activity"
+
+  - platform: custom
+    lambda: |-
+      auto r = ${init}
+      return {r->oiModeSensor};
+
+    text_sensors:
+      - name: "${name} OI mode"
 
 switch:
   - platform: gpio
