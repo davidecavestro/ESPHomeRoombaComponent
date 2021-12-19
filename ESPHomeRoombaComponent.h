@@ -8,6 +8,7 @@ class RoombaComponent : public PollingComponent, public CustomAPIDevice {
   protected:
     uint8_t brcPin;
     uint32_t updateInterval;
+    Roomba::Baud baud;
     Roomba roomba;
     SoftwareSerial *serial;
     bool IR = false;
@@ -129,8 +130,11 @@ ESP_LOGI("roomba", "ACK %s", command.c_str());
 
 //        this->brc_init();
 
+ESP_LOGI("roomba", "Starting OI");
         this->roomba.start();
         register_service(&RoombaComponent::on_command, "command", {"command"});
+ESP_LOGI("roomba", "Switching to custom baud rate");
+        this->roomba.baud(this->baud);
     }
 
     void update() override
@@ -154,15 +158,15 @@ ESP_LOGI("roomba", "ACK %s", command.c_str());
           Roomba::SensorVoltage,        // 2 bytes, mV, unsigned
           Roomba::SensorCurrent,        // 2 bytes, mA, signed
           Roomba::SensorBatteryCharge,  // 2 bytes, mAh, unsigned
-          Roomba::SensorBatteryCapacity,// 2 bytes, mAh, unsigned
+          Roomba::SensorBatteryCapacity, // 2 bytes, mAh, unsigned
           Roomba::SensorOIMode          // 1 byte
       };
       uint8_t values[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-//ESP_LOGI("roomba", "reading data from serial");
+ESP_LOGI("roomba", "reading data from serial");
       // Serial reading timeout -- https://community.home-assistant.io/t/add-wifi-to-an-older-roomba/23282/52
       bool success = this->roomba.getSensorsList(sensors, sizeof(sensors), values, sizeof(values));
-//ESP_LOGI("roomba", "getSensorsList result is %d", success);
+ESP_LOGI("roomba", "getSensorsList result is %d", success);
       if (!success)
           return;
 
@@ -173,12 +177,13 @@ ESP_LOGI("roomba", "ACK %s", command.c_str());
       capacity = values[9] * 256 + values[10];
       charging = values[2];
 
+ESP_LOGI("roomba", "oimode is %d", values[11]);
       std::string oiMode = this->get_oimode(values[11]);
 
       float battery_level = 100.0 * ((1.0 * charge) / (1.0 * capacity));
       std::string activity = this->get_activity(charging, current);
 
-//ESP_LOGI("roomba", "publishing state changes");
+ESP_LOGI("roomba", "publishing state changes");
 
       // Only publish new states if there was a change
       if (this->distanceSensor->state != distance)
@@ -211,10 +216,11 @@ ESP_LOGI("roomba", "ACK %s", command.c_str());
 
   private:
     RoombaComponent(uint8_t brcPin, SoftwareSerial *serial, Roomba::Baud baud, uint32_t updateInterval) :
-        PollingComponent(updateInterval), roomba(serial, baud)
+        PollingComponent(updateInterval), roomba(serial, Roomba::Baud115200)
     {
         this->serial = serial;
         this->brcPin = brcPin;
+        this->baud = baud;
         this->updateInterval = updateInterval;
 
         this->distanceSensor = new Sensor();

@@ -16,8 +16,7 @@ esphome:
 substitutions:
   name: "roomba"
   # BRC pin, RX pin, TX pin, polling interval in milliseconds
-  init: 'RoombaComponent::instance(2, 5, 4, Roomba::Baud115200, 30000);'
-
+  init: 'RoombaComponent::instance(2, 5, 4, Roomba::Baud57600, 30000);'
 
 
 # Enable logging
