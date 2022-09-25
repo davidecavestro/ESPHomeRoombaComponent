@@ -254,7 +254,7 @@ class RoombaComponent : public UARTDevice, public CustomAPIDevice, public Pollin
 			else if (command == "wakeup") {
 				brc_wakeup();
 			}
-			else if (command == "wake_om_dock") {
+			else if (command == "wake_on_dock") {
 				wake_on_dock();
 			}
 			else if (command == "sleep") {
